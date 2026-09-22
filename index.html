@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Achievement Log</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📜</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -52,9 +53,7 @@
   }
 
   * { box-sizing: border-box; }
-  html {
-    scroll-padding-top: env(safe-area-inset-top, 0px);
-  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
   html, body { height: 100%; }
   body {
     margin: 0;
@@ -64,6 +63,7 @@
     padding-top: env(safe-area-inset-top, 0px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
     -webkit-font-smoothing: antialiased;
+    transition: background .2s ease, color .2s ease;
   }
 
   .wrap {
@@ -73,7 +73,11 @@
   }
 
   header.page-head {
-    margin-bottom: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 8px;
   }
   header.page-head h1 {
     font-family: var(--font-head);
@@ -91,11 +95,48 @@
     max-width: 56ch;
   }
 
+  .theme-toggle {
+    flex-shrink: 0;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink-soft);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color .15s ease, color .15s ease;
+  }
+  .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+
+  .stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 24px 0 0;
+  }
+  .stat-chip {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    padding: 6px 11px;
+  }
+  .stat-chip strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
   .filters {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    margin: 28px 0 4px;
+    margin: 22px 0 4px;
   }
   .filter-btn {
     font-family: var(--font-mono);
@@ -114,11 +155,12 @@
     border-color: var(--accent);
     color: var(--bg);
   }
-
-  .log {
-    position: relative;
-    margin-top: 32px;
+  .filter-btn.star-filter.active {
+    background: var(--gold);
+    border-color: var(--gold);
   }
+
+  .log { position: relative; margin-top: 32px; }
   .log::before {
     content: "";
     position: absolute;
@@ -129,10 +171,38 @@
     background: var(--line);
   }
 
+  .year-divider {
+    position: relative;
+    padding-left: 34px;
+    margin: 28px 0 18px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--ink-soft);
+    letter-spacing: 0.02em;
+  }
+  .year-divider:first-child { margin-top: 0; }
+  .year-divider::before {
+    content: "";
+    position: absolute;
+    left: 1px;
+    top: 5px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--line);
+  }
+
   .entry {
     position: relative;
     padding-left: 34px;
     padding-bottom: 36px;
+    opacity: 0;
+    transform: translateY(6px);
+    animation: enter .45s ease forwards;
+  }
+  @keyframes enter { to { opacity: 1; transform: translateY(0); } }
+  @media (prefers-reduced-motion: reduce) {
+    .entry { animation: none; opacity: 1; transform: none; }
   }
   .entry:last-child { padding-bottom: 4px; }
   .entry::before {
@@ -146,10 +216,7 @@
     background: var(--bg);
     border: 2px solid var(--accent);
   }
-  .entry.featured::before {
-    border-color: var(--gold);
-    background: var(--gold);
-  }
+  .entry.featured::before { border-color: var(--gold); background: var(--gold); }
 
   .entry-date {
     font-family: var(--font-mono);
@@ -163,9 +230,17 @@
     border: 1px solid var(--line);
     border-radius: var(--radius-md);
     padding: 18px 20px;
+    transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
   }
-  .entry.featured .entry-card {
-    border-color: var(--gold);
+  .entry-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px -12px rgba(0,0,0,0.25);
+    border-color: var(--accent);
+  }
+  .entry.featured .entry-card { border-color: var(--gold); }
+  .entry.featured .entry-card:hover { border-color: var(--gold); }
+  @media (prefers-reduced-motion: reduce) {
+    .entry-card:hover { transform: none; }
   }
 
   .entry-top {
@@ -182,8 +257,8 @@
     line-height: 1.3;
     margin: 0;
   }
+  .badges { display: flex; gap: 6px; flex-shrink: 0; }
   .type-pill {
-    flex-shrink: 0;
     font-family: var(--font-mono);
     font-size: 11px;
     color: var(--accent);
@@ -192,22 +267,14 @@
     padding: 3px 8px;
     white-space: nowrap;
   }
-  .entry.featured .type-pill {
+  .star-pill {
+    font-size: 12px;
     color: var(--gold);
-    background: var(--gold-soft);
   }
 
-  .entry-issuer {
-    font-size: 14px;
-    color: var(--ink-soft);
-    margin-bottom: 12px;
-  }
+  .entry-issuer { font-size: 14px; color: var(--ink-soft); margin-bottom: 12px; }
 
-  .entry-body {
-    display: flex;
-    gap: 14px;
-    align-items: flex-start;
-  }
+  .entry-body { display: flex; gap: 14px; align-items: flex-start; }
   .entry-thumb {
     flex-shrink: 0;
     width: 96px;
@@ -219,69 +286,38 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
   }
-  .entry-thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    cursor: pointer;
-  }
-  .entry-thumb .no-image {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--ink-soft);
-    text-align: center;
-    padding: 4px;
-  }
+  .entry-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; cursor: pointer; }
+  .entry-thumb .no-image { font-family: var(--font-mono); font-size: 10px; color: var(--ink-soft); text-align: center; padding: 4px; }
 
-  .entry-text {
-    flex: 1;
-    min-width: 0;
-  }
-  .entry-desc {
-    font-size: 14px;
-    line-height: 1.5;
-    color: var(--ink);
-    margin: 0 0 10px;
-  }
+  .entry-text { flex: 1; min-width: 0; }
+  .entry-desc { font-size: 14px; line-height: 1.5; color: var(--ink); margin: 0 0 10px; }
 
-  .skills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-  .skill-tag {
-    font-size: 12px;
-    color: var(--ink-soft);
+  .skills { display: flex; flex-wrap: wrap; gap: 6px; }
+  .skill-tag { font-size: 12px; color: var(--ink-soft); border: 1px solid var(--line); border-radius: 999px; padding: 3px 9px; }
+
+  .state-msg { font-family: var(--font-mono); font-size: 13px; color: var(--ink-soft); padding: 40px 0; }
+
+  .skeleton { padding-left: 34px; margin-bottom: 20px; }
+  .skeleton-bar {
+    height: 84px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(90deg, var(--surface) 25%, var(--accent-soft) 50%, var(--surface) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
     border: 1px solid var(--line);
-    border-radius: 999px;
-    padding: 3px 9px;
   }
-
-  .state-msg {
-    font-family: var(--font-mono);
-    font-size: 13px;
-    color: var(--ink-soft);
-    padding: 40px 0;
-  }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
   .lightbox {
-    position: fixed;
-    inset: 0;
+    position: fixed; inset: 0;
     background: rgba(0,0,0,0.82);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    z-index: 50;
+    display: none; align-items: center; justify-content: center;
+    padding: 24px; z-index: 50;
   }
   .lightbox.open { display: flex; }
-  .lightbox img {
-    max-width: 100%;
-    max-height: 100%;
-    border-radius: var(--radius-sm);
-  }
+  .lightbox img { max-width: 100%; max-height: 100%; border-radius: var(--radius-sm); }
 
   @media (max-width: 480px) {
     .entry-body { flex-direction: column; }
@@ -293,14 +329,27 @@
 
 <div class="wrap">
   <header class="page-head">
-    <h1>Achievement Log</h1>
-    <p>Certifications, webinars, and workshops, pulled straight from a running record.</p>
+    <div>
+      <h1>Achievement Log</h1>
+      <p>Certifications, webinars, and workshops, pulled straight from a running record.</p>
+    </div>
+    <button class="theme-toggle" id="theme-toggle" title="Toggle theme" aria-label="Toggle light or dark theme">◐</button>
   </header>
+
+  <div class="stats" id="stats"></div>
 
   <div class="filters" id="filters"></div>
 
   <div class="log" id="log">
-    <div class="state-msg">Loading entries…</div>
+    <div class="skeleton">
+      <div class="skeleton-bar"></div>
+    </div>
+    <div class="skeleton">
+      <div class="skeleton-bar"></div>
+    </div>
+    <div class="skeleton">
+      <div class="skeleton-bar"></div>
+    </div>
   </div>
 </div>
 
@@ -310,85 +359,135 @@
 
 <script>
   // ---- CONFIG ----
-  // Replace with your Google Sheets "Publish to web" CSV link.
   const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSW3kvwPuqs63ShmXiyqJ4LjiRC-NBZLAaABgBXCQrC5fotFQuAeuTkCI90CzUOkJYqKOiSQShtrUt8/pub?gid=716278617&single=true&output=csv";
 
   const logEl = document.getElementById('log');
   const filtersEl = document.getElementById('filters');
+  const statsEl = document.getElementById('stats');
   const lightbox = document.getElementById('lightbox');
   const lightboxImg = document.getElementById('lightbox-img');
+  const themeToggle = document.getElementById('theme-toggle');
 
   let allEntries = [];
   let activeFilter = 'All';
+  let starOnly = false;
 
-  function truthy(v) {
-    return String(v).trim().toUpperCase() === 'TRUE';
+  // ---- Theme ----
+  (function initTheme() {
+    let saved = null;
+    try { saved = localStorage.getItem('achlog-theme'); } catch (e) {}
+    if (saved) document.documentElement.setAttribute('data-theme', saved);
+    updateToggleIcon();
+  })();
+  function updateToggleIcon() {
+    const current = document.documentElement.getAttribute('data-theme');
+    const isDark = current === 'dark' || (!current && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    themeToggle.textContent = isDark ? '☀' : '☾';
+  }
+  themeToggle.addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme');
+    const isDark = current === 'dark' || (!current && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    const next = isDark ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem('achlog-theme', next); } catch (e) {}
+    updateToggleIcon();
+  });
+
+  function truthy(v) { return String(v).trim().toUpperCase() === 'TRUE'; }
+  function parseDate(d) { const t = Date.parse(d); return isNaN(t) ? 0 : t; }
+  function yearOf(dateVal) { return dateVal ? new Date(dateVal).getFullYear() : 'Undated'; }
+
+  function escapeHtml(str) {
+    return String(str || '').replace(/[&<>"']/g, m => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[m]));
   }
 
-  function parseDate(d) {
-    const t = Date.parse(d);
-    return isNaN(t) ? 0 : t;
-  }
+  function renderStats() {
+    const total = allEntries.length;
+    const years = allEntries.map(e => e.dateVal).filter(Boolean);
+    const earliest = years.length ? new Date(Math.min(...years)).getFullYear() : null;
+    const byType = {};
+    allEntries.forEach(e => { byType[e.type] = (byType[e.type] || 0) + 1; });
 
-  function render() {
-    const filtered = activeFilter === 'All'
-      ? allEntries
-      : allEntries.filter(e => e.type === activeFilter);
-
-    const sorted = [...filtered].sort((a, b) => {
-      if (a.featured !== b.featured) return a.featured ? -1 : 1;
-      return b.dateVal - a.dateVal;
+    let chips = `<span class="stat-chip"><strong>${total}</strong> entries</span>`;
+    if (earliest) chips += `<span class="stat-chip">logging since <strong>${earliest}</strong></span>`;
+    Object.entries(byType).forEach(([type, count]) => {
+      chips += `<span class="stat-chip">${escapeHtml(type)} <strong>${count}</strong></span>`;
     });
-
-    if (sorted.length === 0) {
-      logEl.innerHTML = '<div class="state-msg">No entries in this category yet.</div>';
-      return;
-    }
-
-    logEl.innerHTML = sorted.map(e => `
-      <div class="entry ${e.featured ? 'featured' : ''}">
-        <div class="entry-date">${e.date || ''}</div>
-        <div class="entry-card">
-          <div class="entry-top">
-            <h2 class="entry-title">${escapeHtml(e.title)}</h2>
-            <span class="type-pill">${escapeHtml(e.type)}</span>
-          </div>
-          <div class="entry-issuer">${escapeHtml(e.issuer)}</div>
-          <div class="entry-body">
-            <div class="entry-thumb">
-              ${e.proof_url
-                ? `<img src="${e.proof_url}" alt="${escapeHtml(e.title)}" loading="lazy" onerror="this.parentElement.innerHTML='<span class=no-image>No image</span>'" onclick="openLightbox('${e.proof_url}')">`
-                : `<span class="no-image">No image</span>`
-              }
-            </div>
-            <div class="entry-text">
-              ${e.description ? `<p class="entry-desc">${escapeHtml(e.description)}</p>` : ''}
-              ${e.skills.length ? `<div class="skills">${e.skills.map(s => `<span class="skill-tag">${escapeHtml(s)}</span>`).join('')}</div>` : ''}
-            </div>
-          </div>
-        </div>
-      </div>
-    `).join('');
+    statsEl.innerHTML = chips;
   }
 
   function renderFilters() {
     const types = ['All', ...new Set(allEntries.map(e => e.type).filter(Boolean))];
-    filtersEl.innerHTML = types.map(t =>
+    let html = types.map(t =>
       `<button class="filter-btn ${t === activeFilter ? 'active' : ''}" data-type="${escapeHtml(t)}">${escapeHtml(t)}</button>`
     ).join('');
-    filtersEl.querySelectorAll('.filter-btn').forEach(btn => {
+    html += `<button class="filter-btn star-filter ${starOnly ? 'active' : ''}" id="star-toggle">★ Featured</button>`;
+    filtersEl.innerHTML = html;
+
+    filtersEl.querySelectorAll('.filter-btn[data-type]').forEach(btn => {
       btn.addEventListener('click', () => {
         activeFilter = btn.dataset.type;
         renderFilters();
         render();
       });
     });
+    document.getElementById('star-toggle').addEventListener('click', () => {
+      starOnly = !starOnly;
+      renderFilters();
+      render();
+    });
   }
 
-  function escapeHtml(str) {
-    return String(str || '').replace(/[&<>"']/g, m => ({
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-    }[m]));
+  function render() {
+    let filtered = activeFilter === 'All' ? allEntries : allEntries.filter(e => e.type === activeFilter);
+    if (starOnly) filtered = filtered.filter(e => e.featured);
+
+    const sorted = [...filtered].sort((a, b) => b.dateVal - a.dateVal);
+
+    if (sorted.length === 0) {
+      logEl.innerHTML = '<div class="state-msg">No entries in this category yet.</div>';
+      return;
+    }
+
+    let html = '';
+    let lastYear = null;
+    sorted.forEach((e, i) => {
+      const y = yearOf(e.dateVal);
+      if (y !== lastYear) {
+        html += `<div class="year-divider">${y}</div>`;
+        lastYear = y;
+      }
+      html += `
+        <div class="entry ${e.featured ? 'featured' : ''}" style="animation-delay:${Math.min(i, 8) * 40}ms">
+          <div class="entry-date">${escapeHtml(e.date)}</div>
+          <div class="entry-card">
+            <div class="entry-top">
+              <h2 class="entry-title">${escapeHtml(e.title)}</h2>
+              <div class="badges">
+                ${e.featured ? '<span class="star-pill">★</span>' : ''}
+                <span class="type-pill">${escapeHtml(e.type)}</span>
+              </div>
+            </div>
+            <div class="entry-issuer">${escapeHtml(e.issuer)}</div>
+            <div class="entry-body">
+              <div class="entry-thumb">
+                ${e.proof_url
+                  ? `<img src="${e.proof_url}" alt="${escapeHtml(e.title)}" loading="lazy" onerror="this.parentElement.innerHTML='<span class=no-image>No image</span>'" onclick="openLightbox('${e.proof_url}')">`
+                  : `<span class="no-image">No image</span>`
+                }
+              </div>
+              <div class="entry-text">
+                ${e.description ? `<p class="entry-desc">${escapeHtml(e.description)}</p>` : ''}
+                ${e.skills.length ? `<div class="skills">${e.skills.map(s => `<span class="skill-tag">${escapeHtml(s)}</span>`).join('')}</div>` : ''}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    logEl.innerHTML = html;
   }
 
   function openLightbox(url) {
@@ -421,6 +520,7 @@
           description: row.description,
           featured: truthy(row.featured)
         }));
+      renderStats();
       renderFilters();
       render();
     })
