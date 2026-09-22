@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Achievement Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+  :root {
+    --bg: #FAFAF8;
+    --surface: #FFFFFF;
+    --ink: #1C1F26;
+    --ink-soft: #5B6570;
+    --accent: #2D5F6B;
+    --accent-soft: #E4EEEF;
+    --gold: #B8863A;
+    --gold-soft: #F6EBD8;
+    --line: #E2DFD6;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --font-head: 'Space Grotesk', sans-serif;
+    --font-body: 'IBM Plex Sans', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14181C;
+      --surface: #1B2126;
+      --ink: #ECEAE4;
+      --ink-soft: #9AA5AE;
+      --accent: #74BCC8;
+      --accent-soft: #20353B;
+      --gold: #D8B876;
+      --gold-soft: #332A18;
+      --line: #2A3138;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14181C;
+    --surface: #1B2126;
+    --ink: #ECEAE4;
+    --ink-soft: #9AA5AE;
+    --accent: #74BCC8;
+    --accent-soft: #20353B;
+    --gold: #D8B876;
+    --gold-soft: #332A18;
+    --line: #2A3138;
+  }
+
+  * { box-sizing: border-box; }
+  html {
+    scroll-padding-top: env(safe-area-inset-top, 0px);
+  }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 56px 24px 80px;
+  }
+
+  header.page-head {
+    margin-bottom: 40px;
+  }
+  header.page-head h1 {
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-size: clamp(32px, 6vw, 44px);
+    line-height: 1.1;
+    margin: 0 0 10px;
+    letter-spacing: -0.01em;
+  }
+  header.page-head p {
+    color: var(--ink-soft);
+    font-size: 16px;
+    line-height: 1.5;
+    margin: 0;
+    max-width: 56ch;
+  }
+
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 28px 0 4px;
+  }
+  .filter-btn {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    background: var(--surface);
+    color: var(--ink-soft);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 7px 14px;
+    cursor: pointer;
+    transition: border-color .15s ease, color .15s ease, background .15s ease;
+  }
+  .filter-btn:hover { border-color: var(--accent); color: var(--ink); }
+  .filter-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg);
+  }
+
+  .log {
+    position: relative;
+    margin-top: 32px;
+  }
+  .log::before {
+    content: "";
+    position: absolute;
+    left: 5px;
+    top: 8px;
+    bottom: 8px;
+    width: 1px;
+    background: var(--line);
+  }
+
+  .entry {
+    position: relative;
+    padding-left: 34px;
+    padding-bottom: 36px;
+  }
+  .entry:last-child { padding-bottom: 4px; }
+  .entry::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 6px;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 2px solid var(--accent);
+  }
+  .entry.featured::before {
+    border-color: var(--gold);
+    background: var(--gold);
+  }
+
+  .entry-date {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+  }
+
+  .entry-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    padding: 18px 20px;
+  }
+  .entry.featured .entry-card {
+    border-color: var(--gold);
+  }
+
+  .entry-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .entry-title {
+    font-family: var(--font-head);
+    font-weight: 600;
+    font-size: 18px;
+    line-height: 1.3;
+    margin: 0;
+  }
+  .type-pill {
+    flex-shrink: 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: var(--radius-sm);
+    padding: 3px 8px;
+    white-space: nowrap;
+  }
+  .entry.featured .type-pill {
+    color: var(--gold);
+    background: var(--gold-soft);
+  }
+
+  .entry-issuer {
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin-bottom: 12px;
+  }
+
+  .entry-body {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .entry-thumb {
+    flex-shrink: 0;
+    width: 96px;
+    height: 68px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    border: 1px solid var(--line);
+    background: var(--accent-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .entry-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    cursor: pointer;
+  }
+  .entry-thumb .no-image {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--ink-soft);
+    text-align: center;
+    padding: 4px;
+  }
+
+  .entry-text {
+    flex: 1;
+    min-width: 0;
+  }
+  .entry-desc {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--ink);
+    margin: 0 0 10px;
+  }
+
+  .skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .skill-tag {
+    font-size: 12px;
+    color: var(--ink-soft);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 3px 9px;
+  }
+
+  .state-msg {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--ink-soft);
+    padding: 40px 0;
+  }
+
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.82);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    z-index: 50;
+  }
+  .lightbox.open { display: flex; }
+  .lightbox img {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: var(--radius-sm);
+  }
+
+  @media (max-width: 480px) {
+    .entry-body { flex-direction: column; }
+    .entry-thumb { width: 100%; height: 140px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="page-head">
+    <h1>Achievement Log</h1>
+    <p>Certifications, webinars, and workshops, pulled straight from a running record.</p>
+  </header>
+
+  <div class="filters" id="filters"></div>
+
+  <div class="log" id="log">
+    <div class="state-msg">Loading entries…</div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox">
+  <img id="lightbox-img" src="" alt="Certificate">
+</div>
+
+<script>
+  // ---- CONFIG ----
+  // Replace with your Google Sheets "Publish to web" CSV link.
+  const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSW3kvwPuqs63ShmXiyqJ4LjiRC-NBZLAaABgBXCQrC5fotFQuAeuTkCI90CzUOkJYqKOiSQShtrUt8/pub?gid=716278617&single=true&output=csv";
+
+  const logEl = document.getElementById('log');
+  const filtersEl = document.getElementById('filters');
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightbox-img');
+
+  let allEntries = [];
+  let activeFilter = 'All';
+
+  function truthy(v) {
+    return String(v).trim().toUpperCase() === 'TRUE';
+  }
+
+  function parseDate(d) {
+    const t = Date.parse(d);
+    return isNaN(t) ? 0 : t;
+  }
+
+  function render() {
+    const filtered = activeFilter === 'All'
+      ? allEntries
+      : allEntries.filter(e => e.type === activeFilter);
+
+    const sorted = [...filtered].sort((a, b) => {
+      if (a.featured !== b.featured) return a.featured ? -1 : 1;
+      return b.dateVal - a.dateVal;
+    });
+
+    if (sorted.length === 0) {
+      logEl.innerHTML = '<div class="state-msg">No entries in this category yet.</div>';
+      return;
+    }
+
+    logEl.innerHTML = sorted.map(e => `
+      <div class="entry ${e.featured ? 'featured' : ''}">
+        <div class="entry-date">${e.date || ''}</div>
+        <div class="entry-card">
+          <div class="entry-top">
+            <h2 class="entry-title">${escapeHtml(e.title)}</h2>
+            <span class="type-pill">${escapeHtml(e.type)}</span>
+          </div>
+          <div class="entry-issuer">${escapeHtml(e.issuer)}</div>
+          <div class="entry-body">
+            <div class="entry-thumb">
+              ${e.proof_url
+                ? `<img src="${e.proof_url}" alt="${escapeHtml(e.title)}" loading="lazy" onerror="this.parentElement.innerHTML='<span class=no-image>No image</span>'" onclick="openLightbox('${e.proof_url}')">`
+                : `<span class="no-image">No image</span>`
+              }
+            </div>
+            <div class="entry-text">
+              ${e.description ? `<p class="entry-desc">${escapeHtml(e.description)}</p>` : ''}
+              ${e.skills.length ? `<div class="skills">${e.skills.map(s => `<span class="skill-tag">${escapeHtml(s)}</span>`).join('')}</div>` : ''}
+            </div>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderFilters() {
+    const types = ['All', ...new Set(allEntries.map(e => e.type).filter(Boolean))];
+    filtersEl.innerHTML = types.map(t =>
+      `<button class="filter-btn ${t === activeFilter ? 'active' : ''}" data-type="${escapeHtml(t)}">${escapeHtml(t)}</button>`
+    ).join('');
+    filtersEl.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        activeFilter = btn.dataset.type;
+        renderFilters();
+        render();
+      });
+    });
+  }
+
+  function escapeHtml(str) {
+    return String(str || '').replace(/[&<>"']/g, m => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[m]));
+  }
+
+  function openLightbox(url) {
+    lightboxImg.src = url;
+    lightbox.classList.add('open');
+  }
+  lightbox.addEventListener('click', () => {
+    lightbox.classList.remove('open');
+    lightboxImg.src = '';
+  });
+
+  fetch(CSV_URL)
+    .then(res => {
+      if (!res.ok) throw new Error('Fetch failed: ' + res.status);
+      return res.text();
+    })
+    .then(csvText => {
+      const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: true });
+      allEntries = parsed.data
+        .filter(row => row.title && row.title.trim())
+        .map(row => ({
+          id: row.id,
+          title: row.title,
+          type: (row.type || 'Uncategorized').trim(),
+          issuer: row.issuer,
+          date: row.date,
+          dateVal: parseDate(row.date),
+          proof_url: (row.proof_url || '').trim(),
+          skills: (row.skills || '').split(',').map(s => s.trim()).filter(Boolean),
+          description: row.description,
+          featured: truthy(row.featured)
+        }));
+      renderFilters();
+      render();
+    })
+    .catch(err => {
+      logEl.innerHTML = `<div class="state-msg">Could not load entries. Check that CSV_URL in the script is set correctly.<br>(${escapeHtml(err.message)})</div>`;
+    });
+</script>
+
+</body>
+</html>
